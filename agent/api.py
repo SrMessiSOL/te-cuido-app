@@ -185,7 +185,8 @@ def wellbeing():
     if state.active_event is not None:
         state.active_event.resolved = True
         state.active_event.resolved_at = datetime.now(timezone.utc).isoformat()
-        state.history.insert(0, state.active_event)
+        if not any(e.id == state.active_event.id for e in state.history):
+            state.history.insert(0, state.active_event)
         state.active_event = None
     state.status = "ok"
     return {"ok": True}

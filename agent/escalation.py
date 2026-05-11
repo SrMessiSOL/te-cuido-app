@@ -159,4 +159,5 @@ class EscalationAgent:
         event_log.resolved_at = _now()
         state.active_event = None
         state.status = "ok"
-        state.history.insert(0, event_log)
+        if not any(e.id == event_log.id for e in state.history):
+            state.history.insert(0, event_log)
