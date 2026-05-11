@@ -152,6 +152,16 @@ export function Dashboard() {
     }
   }, [agentOnline])
 
+  const handleTestAlert = useCallback(async () => {
+    if (agentOnline) {
+      await fetch('/api/simulate', { method: 'POST' }).catch(() => {})
+    } else {
+      setMockStatus('alert')
+      reset(60)
+      setVitals(dataByStatus.alert.vitals)
+    }
+  }, [agentOnline, reset])
+
   const handleDevCycle = useCallback(() => {
     setMockStatus((current) => {
       let next: Status
@@ -192,6 +202,25 @@ export function Dashboard() {
           patientAge={patientAge}
           status={status}
         />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={handleTestAlert}
+            disabled={status !== 'ok'}
+            className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm lg:text-base font-semibold text-amber-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-amber-500/15 transition-colors"
+          >
+            Probar alerta
+          </button>
+          <button
+            type="button"
+            onClick={handleWellbeingConfirm}
+            disabled={status === 'ok'}
+            className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm lg:text-base font-semibold text-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-cyan-500/15 transition-colors"
+          >
+            Volver a normal
+          </button>
+        </div>
 
         {status === 'ok' && <OkStatusMessage />}
 

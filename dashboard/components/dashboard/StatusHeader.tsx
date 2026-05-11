@@ -45,7 +45,7 @@ export function StatusHeader({ patientName, patientAge, status }: StatusHeaderPr
           {patientName}
         </h1>
         <p className="text-slate-500 text-sm lg:text-lg mt-1">
-          {patientAge} anos
+          {patientAge} años
         </p>
       </div>
       <div

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { EventLog, EventType } from '@/lib/types'
 
 type HistoryListProps = {
@@ -38,6 +39,25 @@ function getResolutionText(event: EventLog): string {
   return 'Resuelto'
 }
 
+function getSolanaExplorerUrl(txHash: string): string {
+  return `https://explorer.solana.com/tx/${txHash}?cluster=devnet`
+}
+
+function getActionLabel(type: string): string {
+  switch (type) {
+    case 'GracePeriod':
+      return 'Ventana de gracia'
+    case 'NotifiedContact':
+      return 'Contacto notificado'
+    case 'Escalated':
+      return 'Emergencia'
+    case 'WellbeingConfirmed':
+      return 'Bienestar confirmado'
+    default:
+      return type
+  }
+}
+
 function CheckCircleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -48,6 +68,8 @@ function CheckCircleIcon({ className }: { className?: string }) {
 }
 
 export function HistoryList({ events }: HistoryListProps) {
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
   if (events.length === 0) {
     return (
       <section className="space-y-3">
@@ -70,36 +92,64 @@ export function HistoryList({ events }: HistoryListProps) {
       </h2>
       
       <div className="rounded-2xl overflow-hidden bg-slate-800/30 border border-slate-700/30">
-        {events.map((event, index) => (
-          <div
-            key={event.id}
-            className={`flex items-center gap-3 lg:gap-4 px-4 lg:px-5 py-3.5 lg:py-4 ${
-              index !== events.length - 1 ? 'border-b border-slate-700/30' : ''
-            }`}
-          >
-            <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center shrink-0">
-              <CheckCircleIcon className="w-4 h-4 lg:w-5 lg:h-5 text-cyan-400" />
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-white text-sm lg:text-base">
-                  {eventTypeLabels[event.type]}
+        {events.map((event, index) => {
+          const isExpanded = expandedId === event.id
+          return (
+            <div
+              key={event.id}
+              className={index !== events.length - 1 ? 'border-b border-slate-700/30' : ''}
+            >
+              <button
+                type="button"
+                onClick={() => setExpandedId(isExpanded ? null : event.id)}
+                className="w-full flex items-center gap-3 lg:gap-4 px-4 lg:px-5 py-3.5 lg:py-4 text-left hover:bg-slate-800/40 transition-colors"
+              >
+                <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center shrink-0">
+                  <CheckCircleIcon className="w-4 h-4 lg:w-5 lg:h-5 text-cyan-400" />
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-white text-sm lg:text-base">
+                      {eventTypeLabels[event.type]}
+                    </span>
+                    <span className="text-cyan-400 text-xs lg:text-sm">
+                      Resuelto
+                    </span>
+                  </div>
+                  <p className="text-xs lg:text-sm text-slate-500 truncate">
+                    {getResolutionText(event)}
+                  </p>
+                </div>
+                
+                <span className="text-xs lg:text-sm text-slate-600 shrink-0">
+                  {formatDate(event.timestamp)}
                 </span>
-                <span className="text-cyan-400 text-xs lg:text-sm">
-                  Resuelto
-                </span>
-              </div>
-              <p className="text-xs lg:text-sm text-slate-500 truncate">
-                {getResolutionText(event)}
-              </p>
+              </button>
+
+              {isExpanded && (
+                <div className="px-4 lg:px-5 pb-4 lg:pb-5 pl-16 lg:pl-[4.5rem] space-y-2">
+                  {event.actions.map((action, actionIndex) => (
+                    <a
+                      key={`${action.txHash}-${actionIndex}`}
+                      href={getSolanaExplorerUrl(action.txHash)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between gap-3 rounded-lg border border-slate-700/40 bg-slate-900/40 px-3 py-2 hover:border-cyan-500/40 transition-colors"
+                    >
+                      <span className="text-xs lg:text-sm text-slate-300 truncate">
+                        {action.note || getActionLabel(action.type)}
+                      </span>
+                      <span className="text-xs lg:text-sm text-cyan-400 shrink-0">
+                        Ver tx
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
-            
-            <span className="text-xs lg:text-sm text-slate-600 shrink-0">
-              {formatDate(event.timestamp)}
-            </span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>
   )
