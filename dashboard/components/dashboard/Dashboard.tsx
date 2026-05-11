@@ -13,8 +13,6 @@ import { HistoryList } from './HistoryList'
 import { DevModeToggle } from './DevModeToggle'
 import { EmergencyBanner } from './EmergencyBanner'
 
-const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL ?? 'http://localhost:8000'
-
 const dataByStatus: Record<Status, DashboardData> = {
   ok: mockOk,
   alert: mockAlert,
@@ -147,7 +145,7 @@ export function Dashboard() {
   // ── Acciones ────────────────────────────────────────────────────────
   const handleWellbeingConfirm = useCallback(async () => {
     if (agentOnline) {
-      await fetch(`${AGENT_URL}/api/wellbeing`, { method: 'POST' }).catch(() => {})
+      await fetch('/api/wellbeing', { method: 'POST' }).catch(() => {})
       // El polling detectará el cambio de estado en ~3s
     } else {
       setMockStatus('ok')

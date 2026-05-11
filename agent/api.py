@@ -13,7 +13,7 @@ if os.name == "nt":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 # cargar .env del directorio padre
@@ -31,6 +31,7 @@ from agent.models import AnomalyEvent, EventType, Vitals
 # === Wiring de dependencias ===
 USE_MOCK_SOLANA = os.getenv("USE_MOCK_SOLANA", "true").lower() == "true"
 USE_MQTT = os.getenv("USE_MQTT", "false").lower() == "true"
+DEMO_API_KEY = os.getenv("DEMO_API_KEY", "").strip()
 
 if USE_MOCK_SOLANA:
     from agent.solana_writer_mock import MockSolanaWriter
@@ -66,9 +67,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="TE CUIDO Agent", version="0.1.0", lifespan=lifespan)
 
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "*").split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -113,6 +120,12 @@ def _serialize_event(e):
     }
 
 
+def _require_demo_key(x_demo_api_key: str | None = Header(default=None)):
+    """Protect public demo mutation endpoints when DEMO_API_KEY is configured."""
+    if DEMO_API_KEY and x_demo_api_key != DEMO_API_KEY:
+        raise HTTPException(status_code=401, detail="invalid demo api key")
+
+
 # === Endpoints ===
 
 @app.get("/api/health")
@@ -147,7 +160,7 @@ def status():
     }
 
 
-@app.post("/api/wellbeing")
+@app.post("/api/wellbeing", dependencies=[Depends(_require_demo_key)])
 def wellbeing():
     """El familiar (o Carmen desde el dispositivo) confirma que está bien."""
     state.wellbeing_confirmed = True
@@ -218,7 +231,7 @@ def _make_vitals_for(event_type: str) -> tuple[Vitals, AnomalyEvent]:
     return vitals, event
 
 
-@app.post("/api/simulate")
+@app.post("/api/simulate", dependencies=[Depends(_require_demo_key)])
 async def simulate(event_type: str = "low_hr"):
     """
     Inyecta un evento simulado sin necesitar MQTT.

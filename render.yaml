@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: tecuido-agent
+    env: python
+    plan: free
+    buildCommand: pip install -r agent/requirements.txt
+    startCommand: uvicorn agent.api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: USE_MOCK_SOLANA
+        value: "true"
+      - key: USE_MQTT
+        value: "false"
+      - key: SOLANA_NETWORK
+        value: devnet
+      - key: SOLANA_RPC_URL
+        value: https://api.devnet.solana.com
+      - key: PATIENT_NAME
+        value: Carmen Garcia
+      - key: PATIENT_AGE
+        value: "78"
