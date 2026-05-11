@@ -120,6 +120,21 @@ def _serialize_event(e):
     }
 
 
+async def _serialize_solana():
+    if USE_MOCK_SOLANA:
+        return {"mode": "mock"}
+    wallet = None
+    balance_lamports = None
+    try:
+        if hasattr(solana_writer, "_keypair"):
+            wallet = str(solana_writer._keypair.pubkey())
+        if hasattr(solana_writer, "wallet_balance_lamports"):
+            balance_lamports = await solana_writer.wallet_balance_lamports()
+    except Exception as e:
+        return {"mode": "real", "wallet": wallet, "error": f"{type(e).__name__}: {e}"}
+    return {"mode": "real", "wallet": wallet, "balance_lamports": balance_lamports}
+
+
 def _require_demo_key(x_demo_api_key: str | None = Header(default=None)):
     """Protect public demo mutation endpoints when DEMO_API_KEY is configured."""
     if DEMO_API_KEY and x_demo_api_key != DEMO_API_KEY:
@@ -134,7 +149,7 @@ def health():
 
 
 @app.get("/api/status")
-def status():
+async def status():
     grace_remaining = None
     if (
         state.status == "alert"
@@ -158,6 +173,7 @@ def status():
         "history": [_serialize_event(e) for e in state.history[:10]],
         "grace_seconds_remaining": grace_remaining,
         "last_error": state.last_error,
+        "solana": await _serialize_solana(),
     }
 
 
