@@ -164,6 +164,12 @@ def status():
 def wellbeing():
     """El familiar (o Carmen desde el dispositivo) confirma que está bien."""
     state.wellbeing_confirmed = True
+    if state.active_event is not None:
+        state.active_event.resolved = True
+        state.active_event.resolved_at = datetime.now(timezone.utc).isoformat()
+        state.history.insert(0, state.active_event)
+        state.active_event = None
+    state.status = "ok"
     return {"ok": True}
 
 
