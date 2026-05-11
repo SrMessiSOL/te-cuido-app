@@ -19,3 +19,5 @@ services:
         value: Carmen Garcia
       - key: PATIENT_AGE
         value: "78"
+      - key: DEPLOY_MARKER
+        value: "2026-05-11-reset"
