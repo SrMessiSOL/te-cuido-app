@@ -39,9 +39,11 @@ class EscalationAgent:
             return  # ya hay una escalada activa
         self._handling = True
         try:
+            state.last_error = None
             await self._handle_inner(event)
         except Exception as e:
-            print(f"[Escalation] error: {e}")
+            state.last_error = f"{type(e).__name__}: {e}"
+            print(f"[Escalation] error: {state.last_error}")
         finally:
             self._handling = False
 

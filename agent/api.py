@@ -157,6 +157,7 @@ def status():
         "active_event": _serialize_event(state.active_event),
         "history": [_serialize_event(e) for e in state.history[:10]],
         "grace_seconds_remaining": grace_remaining,
+        "last_error": state.last_error,
     }
 
 
@@ -164,6 +165,7 @@ def status():
 def wellbeing():
     """El familiar (o Carmen desde el dispositivo) confirma que está bien."""
     state.wellbeing_confirmed = True
+    state.last_error = None
     if state.active_event is not None:
         state.active_event.resolved = True
         state.active_event.resolved_at = datetime.now(timezone.utc).isoformat()

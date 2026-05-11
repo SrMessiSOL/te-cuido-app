@@ -16,6 +16,7 @@ class AppState:
     history: list = field(default_factory=list)
     recent_vitals: deque = field(default_factory=lambda: deque(maxlen=30))
     wellbeing_confirmed: bool = False
+    last_error: Optional[str] = None
 
 
 # singleton compartido entre subscriber, escalation y api
